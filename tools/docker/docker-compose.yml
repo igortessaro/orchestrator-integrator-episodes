@@ -1,0 +1,44 @@
+version: '3.8'
+
+services:
+  orchestrator-integrator-rabbitmq-service:
+    container_name: orchestrator-integrator-rabbitmq
+    image: rabbitmq:3-management
+    ports:
+      - "8080:15672"
+      - "5672:5672"
+      - "25676:25676"
+    restart: always
+    networks:
+      - orchestrator-network
+    environment:
+      - "RABBITMQ_DEFAULT_USER=igor_tessaro"
+      - "RABBITMQ_DEFAULT_PASS=password"
+  logging-seq-service:
+    container_name: logging-seq
+    image: datalust/seq
+    ports:
+      - "5341:80"
+    restart: always
+    networks:
+      - orchestrator-network
+    environment:
+      - "ACCEPT_EULA=Y"
+  orchestrator-integrator-application-api:
+    depends_on:
+      - orchestrator-integrator-rabbitmq
+    build:
+      context: ../../src/
+      dockerfile: Dockerfile
+    container_name: orchestrator-integrator-application-api
+    ports:
+      - "5000:80"
+      - "5001:443"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+    restart: always
+    networks:
+      - orchestrator-network
+
+networks:
+  orchestrator-network:
